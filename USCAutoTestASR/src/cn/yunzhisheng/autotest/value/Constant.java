@@ -1,7 +1,7 @@
 package cn.yunzhisheng.autotest.value;
 
-import java.io.InputStream;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 
 import cn.yunzhisheng.autotest.bean.TaskConfigBean;
 import cn.yunzhisheng.autotest.bean.TestTaskBean;
@@ -10,17 +10,20 @@ public class Constant {
 
 	// 应用根目录
 	public static final String APP_RES_PARENT_FOLDER = "AutoTest";
-	// 配置文件目录
+	// 配置文件夹
 	public static final String APP_RES_CONFIGFILE_FOLDER = "Config";
-	// 测试任务配置文件
+	// 测试结果文件夹
+	public static final String APP_RES_RESULT_FOLDER = "Result";
+
+	// 测试任务配置文件 autotest.properties
 	public static final String APP_RES_TASK_CONFIGFILE = "autotest.properties";
 
 	// 测试任务
 	public static TaskConfigBean taskConfig = null;
-	
+
 	// 编码格式utf-8
 	public static final String ENCODE = "gbk";
-	
+
 	// 测试任务单
 	public static TestTaskBean task = null;
 
@@ -31,8 +34,10 @@ public class Constant {
 	// 获取测试文件列表后半部uri
 	public final static String MATERIAL_URI_PART = "?tpl=list&folders-filter=\\&recursive";
 
-	public static InputStream material;
-	public static HashMap<String, String> materials = new HashMap<String, String>();
+	// 存放素材列表的引用
+	public static List<String> materials = new ArrayList<String>();
+	// public static HashMap<String, String> materials = new HashMap<String,
+	// String>();
 
 	// 配置信息
 	public static final String appKey = "h36gapxahhurprhksabjp6sqhja3ig7npbv5lfa7";

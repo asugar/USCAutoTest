@@ -1,9 +1,8 @@
 package cn.yunzhisheng.autotest.dao;
 
 import java.io.InputStream;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Map.Entry;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import android.content.Context;
 import android.os.Handler;
@@ -27,10 +26,12 @@ public class AutoTester {
 
 	private StringBuffer testResult = new StringBuffer();
 	public static StringBuffer sbResult = new StringBuffer();
+	private ExecutorService mPool;
+	// 记录线程池是否正在运行
+	private Boolean isRunning = false;
 
 	public AutoTester(Context mContext) {
 		this.mContext = mContext;
-		initParams();
 	}
 
 	// 把MainActivity中的handler移到里面来
@@ -39,14 +40,9 @@ public class AutoTester {
 			switch (msg.what) {
 				case 1:// 获取测试任务 + 解析
 					mAutoTesterListener.getTestTask((String) msg.obj);
-					if (Constant.task != null) {
-						new GetConfigThread().start();
-					}
 					break;
 				case 2:// 下载配置文件 + 解析
 					mAutoTesterListener.getConfigFile((String) msg.obj);
-					// if(Constant.t)
-					new GetMeterialsThread().start();
 					break;
 				case 3:// 获取素材列表 + 验证完整性
 					mAutoTesterListener.getMeterials((String) msg.obj);
@@ -66,10 +62,43 @@ public class AutoTester {
 
 					break;
 				case 7:// 上传测试结果
-
+					mAutoTesterListener.allFinishRecognizer("语音识别全部结束了");
+					mAutoTesterListener.getSendData((String) msg.obj);
 					break;
 				case 8:// 上报测试结果（根据一开始给的地址）
+					mAutoTesterListener.getSendResult((String) msg.obj);
+					break;
+				case 0:
+					String error = (String) msg.obj;
+					if (error.equals("1")) {
+						// 1 --- openConnect失败，请检查网络
+						mAutoTesterListener.getError("openConnect失败，请检查网络");
+					} else if (error.equals("2")) {
+						// 2 --- initParams失败，请检查参数
+						mAutoTesterListener.getError("initParams失败，请检查参数");
+					} else if (error.equals("3")) {
+						// 3 --- conn.getInputStream()时，获取的输入流为空
+						mAutoTesterListener.getError("conn.getInputStream()时，获取的输入流为空");
+					} else if (error.equals("4")) {
+						// 4 --- inputStream2String时，str==null，io操作出错
+						mAutoTesterListener.getError("inputStream2String时，str==null，io操作出错");
+					} else if (error.equals("5")) {
+						// 5 --- 请求结果失败code
+						mAutoTesterListener.getError("请求结果失败code");
+					} else if (error.equals("6")) {
+						// 6 --- 抛异常了
+						mAutoTesterListener.getError("抛异常了，检测url或者网络");
+					} else if (error.equals("7")) {
+						// 7 --- Constant.task.getData_uri() == null
+						mAutoTesterListener.getError("Constant.task.getData_uri() == null");
+					} else if (error.equals("8")) {
+						// 8 --- 没有找到可识别的语音文件.....
+						mAutoTesterListener.getError("没有找到可识别的语音文件.....");
+					} else {
+						mAutoTesterListener.getError(error);
+					}
 
+					Log.i("yi", "handleMessage is over");
 					break;
 				default:
 					break;
@@ -77,24 +106,64 @@ public class AutoTester {
 		};
 	};
 
-	// 开启自动测试方法
+	// 开启自动测试方法，使用一个线程池把所有的操作一块执行了是不是更好？
 	public void start() {
-		new GetTestTaskThread().start();
+		initParams();
+		Log.i("yi", "start is invoked");
+		// 检测 Constant.task在MainActivity中已经做了
+		if (!isRunning) {
+			Log.i("yi", "start isRunning: " + isRunning);
+			// 获取测试任务
+			mPool.execute(new GetTestTaskThread());
+			// 获取配置文件
+			mPool.execute(new GetConfigThread());
+			// 获取素材列表
+			mPool.execute(new GetMeterialsThread());
+			isRunning = true;
+		}
+
 	}
 
 	// 初始化相关数据
 	private void initParams() {
-		// recognizer
-		mAutoTestBusiness = new AutoTestBusiness(mContext);
+
+		// 初始化业务类
+		if (mAutoTestBusiness == null) {
+			mAutoTestBusiness = new AutoTestBusiness(mContext);
+		}
+
+		// 初始化线程池
+		if (mPool != null && mPool.isShutdown()) {
+			mPool = null;
+		}
+		mPool = Executors.newSingleThreadExecutor();
 	}
 
 	// 获取测试任务线程
 	private class GetTestTaskThread extends Thread {
 		@Override
 		public void run() {
-			// 1.获取测试任务单，无需返回值
-			String result = mAutoTestBusiness.getTestTask(Constant.TASK_URI);
-			mHandler.obtainMessage(1, result).sendToTarget();
+			try {
+				Log.i("yi", "GetTestTaskThread");
+				// 验证Constant.TASK_URI有效性
+				if (Constant.TASK_URI == null) {
+					stopPool();
+					mHandler.obtainMessage(0, "TASK_URI无效，请核对！！！").sendToTarget();
+				}
+
+				// 1.获取测试任务单，无需返回值
+				String result = mAutoTestBusiness.getTestTask(Constant.TASK_URI);
+				// 对返回的结果进行处理
+				if (result.length() == 1) {
+					stopPool();
+					Log.i("yi", "result.length() == 1");
+					mHandler.obtainMessage(1, "获取任务失败！！！").sendToTarget();
+					mHandler.obtainMessage(0, result).sendToTarget();
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
 		}
 	}
 
@@ -102,8 +171,16 @@ public class AutoTester {
 	private class GetConfigThread extends Thread {
 		@Override
 		public void run() {
-			// 2.获取配置文件
-			mHandler.obtainMessage(2, "获取配置文件情况").sendToTarget();
+			try {
+				Log.i("yi", "GetConfigThread");
+				// 验证路径有效性
+
+				// 2.获取配置文件
+				mHandler.obtainMessage(2, "获取配置文件情况").sendToTarget();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
 		}
 	}
 
@@ -111,9 +188,28 @@ public class AutoTester {
 	private class GetMeterialsThread extends Thread {
 		@Override
 		public void run() {
-			// 3.获取素材列表
-			String result = mAutoTestBusiness.getTestMaterials();
-			mHandler.obtainMessage(3, result).sendToTarget();
+			try {
+				// 3.获取素材列表 使用的地址是从测试任务获取到的，
+				// 地址有效性验证应该在这里做
+				if (Constant.task.getData_uri() == null) {
+					// 7
+					// return "Constant.task.getData_uri() == null";
+					stopPool();
+					mHandler.obtainMessage(0, "7").sendToTarget();
+				}
+				Log.i("yi", "GetMeterialsThread");
+				String result = mAutoTestBusiness.getTestMaterials();
+				if (result.length() == 1) {
+					stopPool();
+					mHandler.obtainMessage(3, "获取素材列表失败！！！").sendToTarget();
+					mHandler.obtainMessage(0, result).sendToTarget();
+				} else {
+					mHandler.obtainMessage(3, result).sendToTarget();
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
 		}
 	}
 
@@ -125,6 +221,12 @@ public class AutoTester {
 			recognizer = null;
 		}
 
+		if (mPool != null) {
+			mPool.shutdown();
+			isRunning = false;
+			mPool = null;
+		}
+
 		if (mAutoTestBusiness != null) {
 			mAutoTestBusiness.stopAutoTest();
 			mAutoTestBusiness = null;
@@ -134,7 +236,36 @@ public class AutoTester {
 			mHandler.removeCallbacksAndMessages(null);
 			mHandler = null;
 		}
+	}
 
+	// 停止线程池运行
+	private void stopPool() {
+		Log.i("yi", "stopPool shutdownNow");
+		if (mPool != null) {
+			// mPool.shutdown();
+			mPool.shutdownNow();
+			isRunning = false;
+		}
+	}
+
+	private void pauseAutoTest() {
+		Log.i("yi", "pauseAutoTest");
+		if (recognizer != null) {
+			recognizer.stop();
+		}
+
+		if (mPool != null) {
+			mPool.shutdownNow();
+			isRunning = false;
+		}
+
+		if (mAutoTestBusiness != null) {
+			mAutoTestBusiness.stopAutoTest();
+		}
+
+		if (mHandler != null) {
+			mHandler.removeCallbacksAndMessages(null);
+		}
 	}
 
 	// 初始化测试配置信息
@@ -155,7 +286,11 @@ public class AutoTester {
 
 			@Override
 			public void onEnd(USCError error) {
-				Log.i("yi", " error: " + error);
+
+				if (error != null) {
+					Log.i("yi", " error: " + error);
+					mAutoTesterListener.getError(error.toString());
+				}
 				testResult.append("\n");
 				sbResult.append("\n");
 				synchronized (asrUSCLock) {
@@ -177,70 +312,127 @@ public class AutoTester {
 
 	// 开始自动测试
 	private void startAutoTest() {
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				if (Constant.materials != null && Constant.materials.size() <= 0) {
-					Log.e("yi", "没有找到可识别的语音文件.....");
-					return;
-				}
-				// 遍历hashmap
-				Iterator<Entry<String, String>> iter = Constant.materials.entrySet().iterator();
-				Constant.materials.size();
-				int count = 0;
-				while (iter.hasNext()) {
-					Map.Entry<String, String> entry = (Entry<String, String>) iter.next();
-					count++;
-					String name = (String) entry.getKey();
-					String uri = (String) entry.getValue();
+		// 获取列表有效性验证
+		if (Constant.materials != null && Constant.materials.size() <= 0) {
+			// 8
+			Log.e("yi", "没有找到可识别的语音文件.....");
+			mHandler.obtainMessage(0, "8").sendToTarget();
+			return;
+		}
 
-					testResult.append("第 " + count + " 个文件").append(name).append(":");
-					sbResult.append("第 " + count + " 个文件 ").append(name.trim()).append(" : ");
-					InputStream is = mAutoTestBusiness.getTestMaterialData(uri);
-					if (is == null) {
-						Log.e("yi", "is == null");
-						continue;
-					}
+		// 遍历
+		for (int i = 0; i < Constant.materials.size(); i++) {
+			mPool.execute(new TestMaterialThread(i));
+		}
 
-					mAutoTesterListener.getTestTask("获取文件：" + name + "成功");
+		// data的数据也是需要计算获取的吧
+		mPool.execute(new SendDataThread());
+		mPool.execute(new SendResultThread());
 
-					try {
-						Thread.sleep(100);
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
+	}
 
-					mAutoTesterListener.startRecognizer("开始第" + count + "个文件识别");
-
-					recognizer.start(is);
-
-					synchronized (asrUSCLock) {
-						try {
-							asrUSCLock.wait();
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-					}
-					mAutoTestBusiness.closeConnect();
+	// 上报数据
+	private class SendResultThread extends Thread {
+		@Override
+		public void run() {
+			try {
+				// 上报数据
+				String sendResult = mAutoTestBusiness.sendResult(Constant.TASK_RESULT_URI, "结果");
+				if (sendResult.length() == 1) {
+					mHandler.obtainMessage(8, "上报数据失败").sendToTarget();
+					mHandler.obtainMessage(0, sendResult).sendToTarget();
+				} else {
+					mHandler.obtainMessage(8, sendResult).sendToTarget();
 				}
 
-				// data的数据也是需要计算获取的吧
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	// 数据上传线程
+	private class SendDataThread extends Thread {
+		@Override
+		public void run() {
+			try {
 				Log.i("yi", "语音识别结束了: \n" + testResult.toString());
-				mAutoTesterListener.allFinishRecognizer("语音识别全部结束了");
+				// mHandler.obtainMessage(7, "").sendToTarget();
+
 				// 上传数据
 				String sendDataResult = mAutoTestBusiness.sendData(Constant.task.getResult_uri(),
 						IOUtil.String2InputStream(sbResult.toString()), "result.txt");
-				if (sendDataResult != null) {
-					mAutoTesterListener.getSendData(sendDataResult);
+				if (sendDataResult.length() == 1) {
+					mHandler.obtainMessage(7, "上传数据失败").sendToTarget();
+					mHandler.obtainMessage(0, sendDataResult).sendToTarget();
+				} else {
+					mHandler.obtainMessage(7, sendDataResult).sendToTarget();
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	// 素材测试线程
+	private class TestMaterialThread extends Thread {
+
+		private int i;
+
+		public TestMaterialThread(int index) {
+			i = index;
+		}
+
+		@Override
+		public void run() {
+			try {
+
+				String uri = Constant.materials.get(i);
+				String[] spliter = uri.split("/");
+				String name = spliter[5].trim();
+				// 备用
+				// String fileforder = spliter[4];
+
+				testResult.append("第 " + i + " 个文件").append(name).append(":");
+				sbResult.append("第 " + i + " 个文件 ").append(name).append(" : ");
+				InputStream is = mAutoTestBusiness.getTestMaterialData(uri);
+				if (is == null) {
+					Log.e("yi", "is == null");
+					return;
 				}
 
-				// 上报数据
-				String sendResult = mAutoTestBusiness.sendResult(Constant.TASK_RESULT_URI, "结果");
-				if (sendResult != null) {
-					mAutoTesterListener.getSendResult(sendResult);
+				mAutoTesterListener.getTestTask("获取文件：" + name + "成功");
+
+				try {
+					Thread.sleep(100);
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
+
+				mAutoTesterListener.startRecognizer("开始第" + i + "个文件识别");
+
+				recognizer.start(is);
+
+				synchronized (asrUSCLock) {
+					try {
+						asrUSCLock.wait();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+				if(is != null){
+					is = null;
+				}
+				// if (is != null) {
+				// is.close();
+				// is = null;
+				// }
+				mAutoTestBusiness.closeConnect();
+
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
-		}).start();
+		}
 	}
 
 	// 注册接口
@@ -288,6 +480,9 @@ public class AutoTester {
 
 		// 获取上报数据结果
 		public void getSendResult(String result);
+
+		// 返回错误信息
+		public void getError(String error);
 
 	}
 

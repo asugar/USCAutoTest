@@ -1,6 +1,7 @@
 package cn.yunzhisheng.autotest.dao;
 
 import java.io.InputStream;
+import java.util.Arrays;
 
 import android.content.Context;
 import android.util.Log;
@@ -39,6 +40,7 @@ public class AutoTestBusiness {
 
 	protected void stopAutoTest() {
 		if (mHttpClient != null) {
+			// 会有隐患？？？？？
 			new Thread(new Runnable() {
 				@Override
 				public void run() {
@@ -73,23 +75,23 @@ public class AutoTestBusiness {
 	 */
 	public String getTestMaterials() {
 		try {
-			if (Constant.task.getData_uri() == null) {
-				return "Constant.task.getData_uri() == null";
-			}
 			// 在此拼接uri的地址
 			String str = mHttpClient.doGetHttpDownload(Constant.task.getData_uri() + Constant.MATERIAL_URI_PART);
-			if (str == null) {
-				return "inputStream2String时 str==null";
+			if (str.length() == 1) {
+				return str;
 			}
 
 			String[] subStrings = str.split("\n");
+			Constant.materials = Arrays.asList(subStrings);
 			for (int i = 0; i < subStrings.length; i++) {
-				String song = subStrings[i];
-				String[] spliter = song.split("/");
-				String filename = spliter[5];
-				String fileforder = spliter[4];
-				Log.i("yi", fileforder + " : " + filename);
-				Constant.materials.put(filename, song);
+				// Constant.materials.add(subStrings[i]);
+				// 存储为一个map集合vslist集合
+				// String song = subStrings[i];
+				// String[] spliter = song.split("/");
+				// String filename = spliter[5];
+				// String fileforder = spliter[4];
+				// Log.i("yi", fileforder + " : " + filename);
+				// Constant.materials.put(filename, song);
 			}
 			return "获取测试素材列表成功";
 		} catch (Exception e) {
@@ -109,8 +111,8 @@ public class AutoTestBusiness {
 		String result = null;
 		try {
 			String str = mHttpClient.doGetHttpDownload(uri);
-			if (str == null) {
-				result = "mHttpClient.doGetHttpDownload(uri)时，获取的str为空";
+			if (str.length() == 1) {
+				return str;
 			}
 			BaseBean base = JsonUtil.jsonString2Bean(str);
 			if (base instanceof TestTaskBean) {
@@ -151,24 +153,21 @@ public class AutoTestBusiness {
 	 * @return
 	 */
 	public String sendResult(String result_uri, String data) {
-		String result = null;
 		try {
 			String str = mHttpClient.doGetHttpUpload(result_uri + "?task_id=" + Constant.task.getTask_id()
 					+ "&data_count=" + data);
 
-			if (str == null) {
-				Log.e("yi", "inputStream2String时 str==null");
-				return null;
+			if (str.length() == 1) {
+				return str;
 			}
 
 			MsgBean msg = (MsgBean) JsonUtil.jsonString2MsgBean(str);
-			result = msg.getMsg();
 			Log.i("yi", "返回结果：" + msg.getMsg());
+			return msg.getMsg();
 
 		} catch (Exception e) {
 			e.printStackTrace();
+			return "抛异常了";
 		}
-		return result;
-
 	}
 }

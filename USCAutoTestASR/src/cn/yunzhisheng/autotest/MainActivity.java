@@ -4,7 +4,6 @@ import java.io.File;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -12,8 +11,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import cn.yunzhisheng.autotest.dao.AutoTester;
 import cn.yunzhisheng.autotest.dao.AutoTester.AutoTesterListener;
-import cn.yunzhisheng.autotest.http.HttpClient;
-import cn.yunzhisheng.autotest.utils.IOUtil;
+import cn.yunzhisheng.autotest.utils.ConfigUtil;
 import cn.yunzhisheng.autotest.value.Constant;
 
 public class MainActivity extends Activity {
@@ -22,34 +20,17 @@ public class MainActivity extends Activity {
 	private EditText et_show_msg;
 	private AutoTester mAutoTester;
 
-	//
-	public final static String TEST = "123一二三四五六七八九十周吴郑王张三李四王五七abc";
-
-	Handler mHandler = new Handler() {
-		public void handleMessage(android.os.Message msg) {
-			switch (msg.what) {
-				case 1:
-					et_show_msg.append((String) msg.obj);
-					et_show_msg.append("\n");
-					break;
-				case 0:
-
-					break;
-				default:
-					break;
-			}
-		};
-	};
-
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		initView();
 		// 生成任务配置文件夹
-		// generateConfigFolder();
+		generateConfigFolder();
+		// 生成结果文件夹
+		generateResultFolder();
 		// 获取任务配置文件
-		// ConfigUtil.getInstance().getTaskConfig();
+		ConfigUtil.getInstance().getTaskConfig();
 		initListener();
 		initParams();
 	}
@@ -57,7 +38,6 @@ public class MainActivity extends Activity {
 	private void initParams() {
 		mAutoTester = new AutoTester(this);
 		mAutoTester.setTRListener(new MyListener());
-
 	}
 
 	private void start() {
@@ -68,10 +48,16 @@ public class MainActivity extends Activity {
 
 	// 获取测试结果的监听器
 	class MyListener implements AutoTesterListener {
+		@Override
+		public void getError(String error) {
+			et_show_msg.append(error);
+			et_show_msg.append("\n");
+		}
 
 		@Override
 		public void getTestTask(String result) {
-			mHandler.obtainMessage(1, result).sendToTarget();
+			et_show_msg.append(result);
+			et_show_msg.append("\n");
 			Log.i("yi", "getTestTask： " + result);
 		}
 
@@ -81,7 +67,8 @@ public class MainActivity extends Activity {
 
 		@Override
 		public void getMeterials(String result) {
-			mHandler.obtainMessage(1, result).sendToTarget();
+			et_show_msg.append(result);
+			et_show_msg.append("\n");
 			Log.i("yi", "getMeterials： " + result);
 		}
 
@@ -91,19 +78,22 @@ public class MainActivity extends Activity {
 
 		@Override
 		public void getMeterial(String result) {
-			mHandler.obtainMessage(1, result).sendToTarget();
+			et_show_msg.append(result);
+			et_show_msg.append("\n");
 			Log.i("yi", "getMeterial： " + result);
 		}
 
 		@Override
 		public void startRecognizer(String result) {
-			mHandler.obtainMessage(1, result).sendToTarget();
+			et_show_msg.append(result);
+			et_show_msg.append("\n");
 			Log.i("yi", "startRecognizer： " + result);
 		}
 
 		@Override
 		public void beingRecognizer(String result) {
-			mHandler.obtainMessage(1, result).sendToTarget();
+			et_show_msg.append(result);
+			et_show_msg.append("\n");
 			Log.i("yi", "beingRecognizer： " + result);
 		}
 
@@ -113,24 +103,28 @@ public class MainActivity extends Activity {
 
 		@Override
 		public void finishRecognizer(String result) {
-			mHandler.obtainMessage(1, result).sendToTarget();
+			et_show_msg.append(result);
+			et_show_msg.append("\n");
 			Log.i("yi", "finishRecognizer： " + result);
 		}
 
 		@Override
 		public void allFinishRecognizer(String result) {
-			mHandler.obtainMessage(1, result).sendToTarget();
+			et_show_msg.append(result);
+			et_show_msg.append("\n");
 			Log.i("yi", "allFinishRecognizer: " + result);
 		}
 
 		@Override
 		public void getSendData(String result) {
-			mHandler.obtainMessage(1, result).sendToTarget();
+			et_show_msg.append(result);
+			et_show_msg.append("\n");
 		}
 
 		@Override
 		public void getSendResult(String result) {
-			mHandler.obtainMessage(1, result).sendToTarget();
+			et_show_msg.append(result);
+			et_show_msg.append("\n");
 		}
 	}
 
@@ -148,24 +142,7 @@ public class MainActivity extends Activity {
 		public void onClick(View arg0) {
 			switch (arg0.getId()) {
 				case R.id.btn_start:
-					 start();
-					new Thread(new Runnable() {
-
-						@Override
-						public void run() {
-							try {
-								String fileName = "badmethod.txt";
-								Log.i("yi", "长度：" + TEST.getBytes(Constant.ENCODE).length);
-								HttpClient.getHttpClient().doPostHttpUpload(
-										"http://10.10.20.206:280/http_data/task_1/", IOUtil.String2InputStream(TEST),
-										fileName);
-							} catch (Exception e) {
-								e.printStackTrace();
-							}
-
-						}
-					});
-//					.start();
+					start();
 					break;
 				default:
 					break;
@@ -189,6 +166,19 @@ public class MainActivity extends Activity {
 		try {
 			File configFolder = new File(AutoTestApplication.getAppResBasePath() + File.separator
 					+ Constant.APP_RES_CONFIGFILE_FOLDER);
+			if (!configFolder.exists()) {
+				configFolder.mkdirs();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	// 生成测试结果文件夹
+	private void generateResultFolder() {
+		try {
+			File configFolder = new File(AutoTestApplication.getAppResBasePath() + File.separator
+					+ Constant.APP_RES_RESULT_FOLDER);
 			if (!configFolder.exists()) {
 				configFolder.mkdirs();
 			}

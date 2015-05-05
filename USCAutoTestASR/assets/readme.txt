@@ -22,3 +22,11 @@ cn.yunzhisheng.autotest.bean -- 实体类包
  
  cn.yunzhisheng.autotest.http
  --HttpClient -- 封装http请求类（可以复用）
+ 
+错误代号：
+1 --- openConnect失败，请检查网络
+2 --- initParams失败，请检查参数
+3 --- conn.getInputStream()时，获取的输入流为空
+4 --- inputStream2String时，str==null，io操作出错
+5 --- 请求结果失败code
+6 --- 抛异常了

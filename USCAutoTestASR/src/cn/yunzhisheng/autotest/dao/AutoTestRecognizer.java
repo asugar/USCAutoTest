@@ -92,6 +92,18 @@ public class AutoTestRecognizer {
 			e.printStackTrace();
 		}
 		mRecognizer.stop();
+		if (is != null) {
+			is = null;
+		}
+		// try {
+		// if (is != null) {
+		// is.close();
+		// is = null;
+		// }
+		// } catch (Exception e) {
+		// e.printStackTrace();
+		// }
+
 	}
 
 	private void setListener() {

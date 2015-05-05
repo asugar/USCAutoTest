@@ -24,12 +24,12 @@ public class AutoTestApplication extends Application {
 	@Override
 	public void onCreate() {
 		super.onCreate();
-
-		if (!android.os.Environment.getExternalStorageState().equals(android.os.Environment.MEDIA_MOUNTED)) {
+		
+		if (android.os.Environment.getExternalStorageState().equals(android.os.Environment.MEDIA_MOUNTED)) {
 			mAppResBasePath = Environment.getExternalStorageDirectory().getPath() + File.separator
 					+ Constant.APP_RES_PARENT_FOLDER;
 		} else {
-
+			// /storage/emulated/0/AutoTest
 			mAppResBasePath = Constant.APP_RES_PARENT_FOLDER;
 		}
 

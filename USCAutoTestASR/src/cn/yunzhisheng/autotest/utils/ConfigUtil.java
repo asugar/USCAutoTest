@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 
+import android.util.Log;
+
 import cn.yunzhisheng.autotest.AutoTestApplication;
 import cn.yunzhisheng.autotest.value.Constant;
 
@@ -24,7 +26,12 @@ public class ConfigUtil {
 	public void getTaskConfig() {
 		String basePath = AutoTestApplication.getAppResBasePath() + File.separator + Constant.APP_RES_CONFIGFILE_FOLDER;
 		try {
-			InputStream is = new FileInputStream(basePath + File.separator + Constant.APP_RES_TASK_CONFIGFILE);
+			File configFile = new File(basePath + File.separator + Constant.APP_RES_TASK_CONFIGFILE);
+			if(!configFile.exists()){
+				Log.i("yi", "配置文件不存在");
+				return;
+			}
+			InputStream is = new FileInputStream(configFile);
 			String jsonString = IOUtil.inputStream2String(is);
 			Constant.taskConfig = JsonUtil.jsonString2TaskConfigBean(jsonString);
 			is.close();

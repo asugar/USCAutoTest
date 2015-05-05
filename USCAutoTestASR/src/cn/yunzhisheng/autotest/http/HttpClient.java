@@ -104,35 +104,47 @@ public class HttpClient {
 		try {
 			Boolean isOpenConnect = openConnect(uri);
 			if (!isOpenConnect) {
-				return "openConnect 时 conn==null";
+				// 1
+				// return "openConnect 时 conn==null";
+				return "1";
 			}
 
 			Boolean isInistParams = initParams(0, null);
 			if (!isInistParams) {
-				return "initParams 时 出错";
+				// 2
+				// return "initParams 时 出错";
+				return "2";
 			}
 
 			int code = mHttpURLConnection.getResponseCode();
 			if (checkResponseCode(code)) {
 				mInputStream = mHttpURLConnection.getInputStream();
 				if (mInputStream == null) {
-					return "conn.getInputStream()时 is==null ";
+					// 3
+					// return "conn.getInputStream()时 is==null ";
+					return "3";
 				}
 
 				String str = IOUtil.inputStream2String(mInputStream);
 				if (str == null) {
-					return "inputStream2String时 str==null";
+					// 4
+					// return "inputStream2String时 str==null";
+					return "4";
 				}
 				closeConn();
 				return str;
 			} else {
 				closeConn();
-				return "请求结果失败：code = " + code;
+				// 5
+				// return "请求结果失败：code = " + code;
+				return "5";
 			}
 
 		} catch (Exception e) {
 			e.printStackTrace();
-			return "doGetHttpDownload 抛异常了";
+			// 6 url无效
+			// return "doGetHttpDownload 抛异常了";
+			return "6";
 		}
 	}
 
@@ -143,17 +155,19 @@ public class HttpClient {
 	 * @return
 	 */
 	public String doGetHttpUpload(String uri) {
-
-		String str = null;
 		try {
 			Boolean isConnect = openConnect(uri);
 			if (!isConnect) {
-				return "openConnect 时 conn==null";
+				// 1
+				// return "openConnect 时 conn==null";
+				return "1";
 			}
 
 			Boolean isInitSuccess = initParams(0, null);
 			if (!isInitSuccess) {
-				return "initParams 时 出错";
+				// 2
+				// return "initParams 时 出错";
+				return "2";
 			}
 
 			int code = mHttpURLConnection.getResponseCode();
@@ -161,23 +175,32 @@ public class HttpClient {
 				mInputStream = mHttpURLConnection.getInputStream();
 
 				if (mInputStream == null) {
-					return "conn.getInputStream()时 is==null";
+					// 3
+					// return "conn.getInputStream()时 is==null";
+					return "3";
 				}
 
-				str = IOUtil.inputStream2String(mInputStream);
+				String str = IOUtil.inputStream2String(mInputStream);
 				if (str == null) {
-					return "inputStream2String时 str==null";
+					// 4
+					// return "inputStream2String时 str==null";
+					closeConn();
+					return "4";
 				}
 				closeConn();
 				return str;
 			} else {
 				closeConn();
-				return "请求结果失败：code = " + code;
+				// 5
+				// return "请求结果失败：code = " + code;
+				return "5";
 			}
 
 		} catch (Exception e) {
 			e.printStackTrace();
-			return "doGetHttpUpload 抛异常了";
+			// 6
+			// return "doGetHttpUpload 抛异常了";
+			return "6";
 		}
 	}
 
@@ -192,12 +215,14 @@ public class HttpClient {
 		try {
 			Boolean isConnect = openConnect(uri);
 			if (!isConnect) {
+				// 1
 				Log.e("yi", "openConnect 时 conn==null");
 				return null;
 			}
 
 			Boolean isInitSuccess = initParams(0, null);
 			if (!isInitSuccess) {
+				// 2
 				Log.e("yi", "initParams 时 出错");
 				return null;
 			}
@@ -206,11 +231,13 @@ public class HttpClient {
 			if (checkResponseCode(code)) {
 				mInputStream = mHttpURLConnection.getInputStream();
 				if (mInputStream == null) {
+					// 3
 					Log.e("yi", "conn.getInputStream()时 is==null");
 					return null;
 				}
 				return mInputStream;
 			} else {
+				// 5
 				Log.e("yi", "请求结果失败：code = " + code);
 				closeConn();
 				return null;
@@ -218,6 +245,7 @@ public class HttpClient {
 
 		} catch (Exception e) {
 			e.printStackTrace();
+			// 6
 			return null;
 		}
 	}
@@ -234,17 +262,20 @@ public class HttpClient {
 	public static final String BOUNDARY = java.util.UUID.randomUUID().toString();
 
 	public String doPostHttpUpload(String uri, InputStream is, String fileName) {
-		String str = null;
 		try {
 
 			Boolean isConnect = openConnect(uri);
 			if (!isConnect) {
-				return "openConnect 时 conn==null";
+				// 1
+				// return "openConnect 时 conn==null";
+				return "1";
 			}
 
 			Boolean isInitSuccess = initParams(1, fileName);
 			if (!isInitSuccess) {
-				Log.e("yi", "initParams 时 出错");
+				// 2
+				// Log.e("yi", "initParams 时 出错");
+				return "2";
 			}
 
 			byte[] headerInfo = null;
@@ -283,17 +314,20 @@ public class HttpClient {
 			int code = mHttpURLConnection.getResponseCode();
 
 			if (checkResponseCode(code)) {
-				str = "结果文件上传成功";
 				closeConn();
+				return "结果文件上传成功";
 			} else {
-				str = "结果文件上传失败：code = " + code;
+				// 5
+				// str = "结果文件上传失败：code = " + code;
 				closeConn();
+				return "5";
 			}
 
 		} catch (Exception e) {
 			e.printStackTrace();
+			// 6
+			return "6";
 		}
-		return str;
 
 	}
 
