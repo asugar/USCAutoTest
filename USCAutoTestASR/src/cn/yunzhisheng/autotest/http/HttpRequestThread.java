@@ -5,7 +5,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import cn.yunzhisheng.autotest.dao.AutoTester;
+import cn.yunzhisheng.autotest.business.AutoTester;
 import cn.yunzhisheng.autotest.utils.IOUtil;
 import cn.yunzhisheng.autotest.value.Constant;
 

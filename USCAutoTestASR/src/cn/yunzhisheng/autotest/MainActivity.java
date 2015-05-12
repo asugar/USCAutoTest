@@ -9,8 +9,8 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
-import cn.yunzhisheng.autotest.dao.AutoTester;
-import cn.yunzhisheng.autotest.dao.AutoTester.AutoTesterListener;
+import cn.yunzhisheng.autotest.business.AutoTester;
+import cn.yunzhisheng.autotest.business.AutoTester.AutoTesterListener;
 import cn.yunzhisheng.autotest.utils.ConfigUtil;
 import cn.yunzhisheng.autotest.value.Constant;
 
@@ -63,6 +63,9 @@ public class MainActivity extends Activity {
 
 		@Override
 		public void getConfigFile(String result) {
+			et_show_msg.append(result);
+			et_show_msg.append("\n");
+			Log.i("yi", "getConfigFile： " + result);
 		}
 
 		@Override
@@ -99,6 +102,8 @@ public class MainActivity extends Activity {
 
 		@Override
 		public void stopRecognizer(String result) {
+			et_show_msg.append(result);
+			et_show_msg.append("\n");
 		}
 
 		@Override

@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.DEPENDENCIES"/>
-	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
-	<classpathentry kind="lib" path="D:/sdk/platforms/android-17/android.jar" sourcepath="D:/Program Files/Java/jdk1.6.0/src.zip"/>
 	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="gen"/>
+	<classpathentry excluding="assets/|bin/|bin/dexedLibs/|bin/res/|gen/|libs/|libs/armeabi/|res/|res/layout/|res/menu/|res/values/|src/" including="src/" kind="src" path=""/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

@@ -7,7 +7,7 @@
     tools:context=".MainActivity" >
 
     <ImageView
-        android:id="@+id/logo_imageview"
+        android:id="@+id/tester_logo_imageview"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/logo" />
@@ -27,7 +27,7 @@
         android:orientation="vertical" >
 
         <EditText
-            android:id="@+id/et_show_msg"
+            android:id="@+id/tester_et_show_msg"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:ems="10"
@@ -39,7 +39,7 @@
         android:layout_height="wrap_content" >
 
         <TextView
-            android:id="@+id/textView1"
+            android:id="@+id/tester_textView1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/input_url"
@@ -48,7 +48,7 @@
             android:textSize="15sp" />
 
         <EditText
-            android:id="@+id/editText1"
+            android:id="@+id/tester_editText1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ems="10"
@@ -59,7 +59,7 @@
     </LinearLayout>
 
     <Button
-        android:id="@+id/btn_start"
+        android:id="@+id/tester_btn_start"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/btn_start"

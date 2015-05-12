@@ -4,10 +4,43 @@ import org.json.JSONObject;
 
 import cn.yunzhisheng.autotest.bean.BaseBean;
 import cn.yunzhisheng.autotest.bean.MsgBean;
+import cn.yunzhisheng.autotest.bean.OnlineASRConfigBean;
 import cn.yunzhisheng.autotest.bean.TaskConfigBean;
-import cn.yunzhisheng.autotest.bean.TestTaskBean;
+import cn.yunzhisheng.autotest.bean.TestConfigBean;
+import cn.yunzhisheng.autotest.bean.TaskBean;
 
 public final class JsonUtil {
+
+	/**
+	 * 获取测试配置文件
+	 * 
+	 * @param jsonString
+	 * @return
+	 */
+	public static TestConfigBean jsonString2TestConfigBean(String jsonString) {
+		TestConfigBean testConfig = null;
+		try {
+			testConfig = new TestConfigBean();
+			JSONObject json = new JSONObject(jsonString);
+			testConfig.setType(json.getString("type"));
+			testConfig.setAppKey(json.getString("appKey"));
+			testConfig.setSecret(json.getString("secret"));
+			JSONObject online_asr_json = json.getJSONObject("online_asr");
+			OnlineASRConfigBean online = new OnlineASRConfigBean();
+			online.setEngine(online_asr_json.getString("engine"));
+			online.setFrontTime(online_asr_json.getInt("frontTime"));
+			online.setBackTime(online_asr_json.getInt("backTime"));
+			online.setRate(online_asr_json.getInt("rate"));
+			online.setLanguage(online_asr_json.getString("language"));
+			online.setFarFiled(online_asr_json.getBoolean("farFiled"));
+			online.setAddress(online_asr_json.getString("address"));
+			online.setScene(online_asr_json.getString("scene"));
+			testConfig.setOnline_asr(online);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return testConfig;
+	}
 
 	/**
 	 * 判断转化为那个实体类
@@ -32,7 +65,7 @@ public final class JsonUtil {
 	 * @return
 	 */
 	public static BaseBean jsonString2TestTaskBean(String jsonString) {
-		TestTaskBean task = new TestTaskBean();
+		TaskBean task = new TaskBean();
 		try {
 			JSONObject json = new JSONObject(jsonString);
 			task.setConfig_uri(json.getString("config_uri"));
